@@ -115,6 +115,7 @@ class AwqQuantizer:
 
     def quantize(self):
         for i in tqdm(range(len(self.modules)), desc="AWQ"):
+        # for i in tqdm(range(1), desc="AWQ"):
             # Move module and inputs to correct device
             common_device = next(self.modules[i].parameters()).device
             if common_device is None or str(common_device) == "cpu":
@@ -190,11 +191,16 @@ class AwqQuantizer:
     def _apply_quant(self, module, named_linears: Dict[str, nn.Linear]):
         for name, linear_layer in named_linears.items():
             # NOTE: small regression in perplexity if linear layer uses .cpu().float()
+            # linear_layer = linear_layer.to(get_best_device()).half()
             linear_layer = linear_layer.to(get_best_device()).half()
 
             linear_layer.weight.data, scales, zeros = self.pseudo_quantize_tensor(
                 linear_layer.weight.data
             )
+
+            # TODO: REMOVE
+            # setattr(linear_layer, "scales", scales)
+            # setattr(linear_layer, "zeros", zeros)
 
             if self.version == "gemm":
                 scales = scales.t().contiguous()
@@ -225,6 +231,7 @@ class AwqQuantizer:
             linear_layer.cpu()
             q_linear.to(next(module.parameters()).device)
             set_op_by_name(module, name, q_linear)
+
             clear_memory()
 
     @torch.no_grad()

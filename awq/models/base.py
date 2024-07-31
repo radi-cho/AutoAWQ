@@ -68,10 +68,10 @@ TRANSFORMERS_AUTO_MAPPING_DICT = {
     "llava": "AutoModelForVision2Seq",
     "qwen2": "AutoModelForCausalLM",
     "gemma": "AutoModelForCausalLM",
+    "gemma2": "AutoModelForCausalLM",
     "stablelm": "AutoModelForCausalLM",
     "starcoder2": "AutoModelForCausalLM",
 }
-
 
 class BaseAWQForCausalLM(nn.Module):
     def __init__(
@@ -464,7 +464,7 @@ class BaseAWQForCausalLM(nn.Module):
         # Dispath to devices
         if fuse_layers:
             self.fuse_layers(model)
-
+        
         if quant_config.version == "marlin":
             model = marlin_post_init(model)
 
@@ -478,7 +478,7 @@ class BaseAWQForCausalLM(nn.Module):
                 max_input_len=max_seq_len or 2048,
                 max_batch_size=int(os.getenv("AWQ_BATCH_SIZE", 1)),
             )
-
+        
         return self(
             model,
             model_type,
